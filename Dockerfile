@@ -26,7 +26,7 @@ RUN echo "Package: ${PKG_NAME}" >> control && \
     echo "Version: ${PKG_VERSION}" >> control && \
     echo "Maintainer: TinyPilot Support <support@tinypilotkvm.com>" >> control && \
     `# TODO: Add other dependencies` && \
-    echo "Depends: " >> control && \
+    echo "Depends: libc6" >> control && \
     echo "Architecture: ${PKG_ARCH}" >> control && \
     echo "Homepage: https://janus.conf.meetecho.com/" >> control && \
     echo "Description: An open source, general purpose, WebRTC server" >> control
