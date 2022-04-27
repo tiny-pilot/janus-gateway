@@ -44,6 +44,6 @@ jobs:
           # TODO: Can we tie the version number to the environment variable?
           path: releases/janus-gateway-1.0.0-1-armhf.deb
 workflows:
-  test:
+  build:
     jobs:
       - build_deb_pkg
