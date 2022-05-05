@@ -45,13 +45,16 @@ RUN pip3 install meson
 # libince is recommended to be installed from source because the version installed via apt is too low
 RUN git clone https://gitlab.freedesktop.org/libnice/libnice && \
     cd libnice && \
-    meson --prefix=/usr build && ninja -C build && sudo ninja -C build install
+    meson --prefix=/usr build && \
+    ninja -C build && \
+    ninja -C build install
 
 RUN wget https://github.com/cisco/libsrtp/archive/v2.2.0.tar.gz && \
     tar xfv v2.2.0.tar.gz && \
     cd libsrtp-2.2.0 && \
     ./configure --prefix=/usr --enable-openssl && \
-    make shared_library && sudo make install
+    make shared_library && \
+    make install
 
 RUN git clone https://libwebsockets.org/repo/libwebsockets && \
     cd libwebsockets && \
@@ -62,14 +65,16 @@ RUN git clone https://libwebsockets.org/repo/libwebsockets && \
     # See https://github.com/meetecho/janus-gateway/issues/732 re: LWS_MAX_SMP
     # See https://github.com/meetecho/janus-gateway/issues/2476 re: LWS_WITHOUT_EXTENSIONS
     cmake -DLWS_MAX_SMP=1 -DLWS_WITHOUT_EXTENSIONS=0 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
-    make && sudo make install
+    make && \
+    make install
 
 RUN git clone https://github.com/meetecho/janus-gateway.git && \
     cd janus-gateway && \
     sh autogen.sh && \
     # we didn't install the dependencies (nor are they needed) for the disabled parts
     ./configure --prefix="${INSTALL_DIR}" --disable-data-channels --disable-rabbitmq --disable-mqtt && \
-    make && sudo make install
+    make && \
+    make install
 
 RUN cat > "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg" <<EOF
 general: {
