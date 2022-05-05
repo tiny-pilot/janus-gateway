@@ -6,14 +6,12 @@ ARG PKG_BUILD_NUMBER="1"
 ARG PKG_ARCH="armhf"
 ARG PKG_ID="${PKG_NAME}-${PKG_VERSION}-${PKG_BUILD_NUMBER}-${PKG_ARCH}"
 ARG PKG_DIR="/releases/${PKG_ID}"
-ARG INSTALL_DIR="${PKG_DIR}/opt/janus"
+ARG INSTALL_DIR="/opt/janus"
 
 RUN set -x && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       dpkg-dev
-
-RUN mkdir -p "${PKG_DIR}"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -76,6 +74,9 @@ RUN git clone https://github.com/meetecho/janus-gateway.git && \
     make && \
     make install
 
+# Allow Janus C header files to be included when compiling third-party plugins.
+RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' "${INSTALL_DIR}/include/janus/plugins/plugin.h"
+
 RUN cat > "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg" <<EOF
 general: {
     ws = true
@@ -84,7 +85,35 @@ general: {
 }
 EOF
 
-RUN mkdir -p "${PKG_DIR}/DEBIAN"
+RUN mkdir "${PKG_DIR}"
+RUN mv "${INSTALL_DIR}/etc" "${PKG_DIR}/"
+
+RUN mkdir "${PKG_DIR}/usr"
+RUN mv "${INSTALL_DIR}/bin" "${PKG_DIR}/usr/" && \
+    mv "${INSTALL_DIR}/lib" "${PKG_DIR}/usr/" && \
+    mv "${INSTALL_DIR}/share" "${PKG_DIR}/usr/"
+
+RUN mkdir "${PKG_DIR}/usr/include"
+RUN mv "${INSTALL_DIR}/include/janus" "${PKG_DIR}/usr/include/"
+
+RUN mkdir --parents "${PKG_DIR}/lib/systemd/system"
+RUN cat > "${PKG_DIR}/lib/systemd/system/janus.service" <<EOF
+[Unit]
+Description=Janus WebRTC gateway
+After=network.target
+Documentation=https://janus.conf.meetecho.com/docs/index.html
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/janus --disable-colors --daemon --log-stdout
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+RUN mkdir "${PKG_DIR}/DEBIAN"
 
 WORKDIR "${PKG_DIR}/DEBIAN"
 
@@ -97,9 +126,20 @@ RUN echo "Package: ${PKG_NAME}" >> control && \
     echo "Homepage: https://janus.conf.meetecho.com/" >> control && \
     echo "Description: An open source, general purpose, WebRTC server" >> control
 
+RUN cat > triggers <<EOF
+activate-noawait ldconfig
+EOF
+
 RUN cat > preinst <<EOF
 #!/bin/bash
-rm -rf /opt/janus
+rm -rf /etc/janus \
+    /usr/bin/janus \
+    /usr/lib/janus \
+    /usr/include/janus \
+    /usr/share/janus \
+    /usr/share/doc/janus \
+    /usr/share/man/man1/janus* \
+    /lib/systemd/system/janus.service
 EOF
 
 RUN chmod 0555 preinst
