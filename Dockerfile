@@ -85,7 +85,7 @@ general: {
 }
 EOF
 
-RUN mkdir "${PKG_DIR}"
+RUN mkdir --parents "${PKG_DIR}"
 RUN mv "${INSTALL_DIR}/etc" "${PKG_DIR}/"
 
 RUN mkdir "${PKG_DIR}/usr"
