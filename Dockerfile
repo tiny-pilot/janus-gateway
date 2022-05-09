@@ -6,7 +6,7 @@ ARG PKG_BUILD_NUMBER="1"
 ARG PKG_ARCH="armhf"
 ARG PKG_ID="${PKG_NAME}-${PKG_VERSION}-${PKG_BUILD_NUMBER}-${PKG_ARCH}"
 ARG PKG_DIR="/releases/${PKG_ID}"
-ARG INSTALL_DIR="/opt/janus"
+ARG INSTALL_DIR="/usr"
 
 RUN set -x && \
     apt-get update && \
@@ -77,6 +77,13 @@ RUN git clone https://github.com/meetecho/janus-gateway.git && \
 # Allow Janus C header files to be included when compiling third-party plugins.
 RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' "${INSTALL_DIR}/include/janus/plugins/plugin.h"
 
+# Ensure default directories exist.
+RUN mkdir --parents "${INSTALL_DIR}/lib/janus/plugins" \
+    "${INSTALL_DIR}/lib/janus/transports"
+
+RUN mv "${INSTALL_DIR}/etc/janus/janus.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.jcfg"
+
+RUN rm "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg.sample"
 RUN cat > "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg" <<EOF
 general: {
     ws = true
@@ -85,19 +92,7 @@ general: {
 }
 EOF
 
-RUN mkdir --parents "${PKG_DIR}"
-RUN mv "${INSTALL_DIR}/etc" "${PKG_DIR}/"
-
-RUN mkdir "${PKG_DIR}/usr"
-RUN mv "${INSTALL_DIR}/bin" "${PKG_DIR}/usr/" && \
-    mv "${INSTALL_DIR}/lib" "${PKG_DIR}/usr/" && \
-    mv "${INSTALL_DIR}/share" "${PKG_DIR}/usr/"
-
-RUN mkdir "${PKG_DIR}/usr/include"
-RUN mv "${INSTALL_DIR}/include/janus" "${PKG_DIR}/usr/include/"
-
-RUN mkdir --parents "${PKG_DIR}/lib/systemd/system"
-RUN cat > "${PKG_DIR}/lib/systemd/system/janus.service" <<EOF
+RUN cat > "/lib/systemd/system/janus.service" <<EOF
 [Unit]
 Description=Janus WebRTC gateway
 After=network.target
@@ -113,36 +108,63 @@ LimitNOFILE=65536
 WantedBy=multi-user.target
 EOF
 
+RUN mkdir --parents "${PKG_DIR}"
+
+RUN cp --parents --recursive "${INSTALL_DIR}/bin/janus" \
+    "${INSTALL_DIR}/etc/janus" \
+    "${INSTALL_DIR}/lib/janus" \
+    "${INSTALL_DIR}/include/janus" \
+    "${INSTALL_DIR}/share/janus" \
+    "${INSTALL_DIR}/share/doc/janus" \
+    "${INSTALL_DIR}/share/man/man1/janus*" \
+    /lib/systemd/system/janus.service \
+    "${PKG_DIR}/"
+
 RUN mkdir "${PKG_DIR}/DEBIAN"
 
 WORKDIR "${PKG_DIR}/DEBIAN"
 
-RUN echo "Package: ${PKG_NAME}" >> control && \
-    echo "Version: ${PKG_VERSION}" >> control && \
-    echo "Maintainer: TinyPilot Support <support@tinypilotkvm.com>" >> control && \
-    `# TODO: Add other dependencies` && \
-    echo "Depends: libc6" >> control && \
-    echo "Architecture: ${PKG_ARCH}" >> control && \
-    echo "Homepage: https://janus.conf.meetecho.com/" >> control && \
-    echo "Description: An open source, general purpose, WebRTC server" >> control
+RUN cat > control <<EOF
+Package: ${PKG_NAME}
+Version: ${PKG_VERSION}
+Maintainer: TinyPilot Support <support@tinypilotkvm.com>
+# TODO: Add other dependencies
+Depends: libc6
+Architecture: ${PKG_ARCH}
+Homepage: https://janus.conf.meetecho.com/
+Description: An open source, general purpose, WebRTC server
+EOF
 
 RUN cat > triggers <<EOF
+# Reindex shared libraries.
 activate-noawait ldconfig
 EOF
 
 RUN cat > preinst <<EOF
 #!/bin/bash
-rm -rf /etc/janus \
-    /usr/bin/janus \
-    /usr/lib/janus \
-    /usr/include/janus \
-    /usr/share/janus \
-    /usr/share/doc/janus \
-    /usr/share/man/man1/janus* \
+rm -rf "${INSTALL_DIR}/etc/janus" \
+    "${INSTALL_DIR}/bin/janus" \
+    "${INSTALL_DIR}/lib/janus" \
+    "${INSTALL_DIR}/include/janus" \
+    "${INSTALL_DIR}/share/janus" \
+    "${INSTALL_DIR}/share/doc/janus" \
+    "${INSTALL_DIR}/share/man/man1/janus*" \
     /lib/systemd/system/janus.service
+systemctl disable --now janus.service > /dev/null 2>&1 || true
 EOF
-
 RUN chmod 0555 preinst
+
+RUN cat > postinst <<EOF
+#!/bin/bash
+systemctl enable --now janus.service
+EOF
+RUN chmod 0555 postinst
+
+RUN cat > postrm <<EOF
+#!/bin/bash
+systemctl disable --now janus.service > /dev/null 2>&1 || true
+EOF
+RUN chmod 0555 postrm
 
 RUN dpkg --build "${PKG_DIR}"
 
