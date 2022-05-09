@@ -129,7 +129,6 @@ RUN cat > control <<EOF
 Package: ${PKG_NAME}
 Version: ${PKG_VERSION}
 Maintainer: TinyPilot Support <support@tinypilotkvm.com>
-# TODO: Add other dependencies
 Depends: libc6
 Architecture: ${PKG_ARCH}
 Homepage: https://janus.conf.meetecho.com/
