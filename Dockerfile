@@ -15,6 +15,7 @@ RUN set -x && \
 
 RUN apt-get install -y --no-install-recommends \
     git \
+    wget \
     libjansson-dev \
     libconfig-dev \
     libssl-dev \
