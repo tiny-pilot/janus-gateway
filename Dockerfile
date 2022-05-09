@@ -13,35 +13,25 @@ RUN set -x && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       dpkg-dev
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libmicrohttpd-dev \
-    libjansson-dev \
-    libssl-dev \
-    libsofia-sip-ua-dev \
-    libglib2.0-dev \
-    libopus-dev \
-    libogg-dev \
-    libcurl4-openssl-dev \
-    liblua5.3-dev \
-    libconfig-dev \
-    pkg-config \
-    gengetopt \
-    libtool \
-    automake \
-    cmake \
-    make \
-    wget \
+RUN apt-get install -y --no-install-recommends \
     git \
-    build-essential \
-    ninja-build \
-    python3 \
-    python3-pip
+    libjansson-dev \
+    libconfig-dev \
+    libssl-dev \
+    cmake \
+    automake \
+    libtool \
+    libglib2.0-dev \
+    pkg-config \
+    python3-pip \
+    ninja-build
 
 RUN pip3 install meson
 
 # libince is recommended to be installed from source because the version installed via apt is too low
-RUN git clone https://gitlab.freedesktop.org/libnice/libnice && \
+RUN git clone https://gitlab.freedesktop.org/libnice/libnice \
+        --branch 0.1.18 \
+        --single-branch && \
     cd libnice && \
     meson --prefix=/usr build && \
     ninja -C build && \
@@ -50,14 +40,15 @@ RUN git clone https://gitlab.freedesktop.org/libnice/libnice && \
 RUN wget https://github.com/cisco/libsrtp/archive/v2.2.0.tar.gz && \
     tar xfv v2.2.0.tar.gz && \
     cd libsrtp-2.2.0 && \
-    ./configure --prefix=/usr --enable-openssl && \
+    ./configure --prefix=/usr \
+        --enable-openssl && \
     make shared_library && \
     make install
 
-RUN git clone https://libwebsockets.org/repo/libwebsockets && \
+RUN git clone https://libwebsockets.org/repo/libwebsockets \
+        --branch v3.2-stable \
+        --single-branch && \
     cd libwebsockets && \
-    # If you want the stable version of libwebsockets, uncomment the next line
-    # git checkout v3.2-stable && \
     mkdir build && \
     cd build && \
     # See https://github.com/meetecho/janus-gateway/issues/732 re: LWS_MAX_SMP
@@ -66,11 +57,17 @@ RUN git clone https://libwebsockets.org/repo/libwebsockets && \
     make && \
     make install
 
-RUN git clone https://github.com/meetecho/janus-gateway.git && \
+RUN git clone https://github.com/meetecho/janus-gateway.git \
+        --branch v1.0.0 \
+        --single-branch && \
     cd janus-gateway && \
     sh autogen.sh && \
-    # we didn't install the dependencies (nor are they needed) for the disabled parts
-    ./configure --prefix="${INSTALL_DIR}" --disable-data-channels --disable-rabbitmq --disable-mqtt && \
+    ./configure --prefix=/usr \
+        --disable-all-plugins \
+        --disable-all-transports \
+        --disable-all-handlers \
+        --disable-all-loggers \
+        --enable-websockets && \
     make && \
     make install
 
@@ -81,13 +78,15 @@ RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' "${INSTALL_
 RUN mkdir --parents "${INSTALL_DIR}/lib/janus/plugins" \
     "${INSTALL_DIR}/lib/janus/transports"
 
-RUN mv "${INSTALL_DIR}/etc/janus/janus.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.jcfg"
+# Use sample config.
+RUN mv "${INSTALL_DIR}/etc/janus/janus.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.jcfg" && \
+    mv "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg"
 
-RUN rm "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg.sample"
+# Overwrite WebSocket config.
 RUN cat > "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg" <<EOF
 general: {
     ws = true
-	ws_ip = "127.0.0.1"
+    ws_ip = "127.0.0.1"
     ws_port = 8002
 }
 EOF
@@ -115,8 +114,8 @@ RUN cp --parents --recursive "${INSTALL_DIR}/bin/janus" \
     "${INSTALL_DIR}/lib/janus" \
     "${INSTALL_DIR}/include/janus" \
     "${INSTALL_DIR}/share/janus" \
-    "${INSTALL_DIR}/share/doc/janus" \
-    "${INSTALL_DIR}/share/man/man1/janus*" \
+    "${INSTALL_DIR}/share/doc/janus-gateway" \
+    "${INSTALL_DIR}/share/man/man1/janus"* \
     /lib/systemd/system/janus.service \
     "${PKG_DIR}/"
 
@@ -147,8 +146,8 @@ rm -rf "${INSTALL_DIR}/etc/janus" \
     "${INSTALL_DIR}/lib/janus" \
     "${INSTALL_DIR}/include/janus" \
     "${INSTALL_DIR}/share/janus" \
-    "${INSTALL_DIR}/share/doc/janus" \
-    "${INSTALL_DIR}/share/man/man1/janus*" \
+    "${INSTALL_DIR}/share/doc/janus-gateway" \
+    "${INSTALL_DIR}/share/man/man1/janus"* \
     /lib/systemd/system/janus.service
 systemctl disable --now janus.service > /dev/null 2>&1 || true
 EOF
