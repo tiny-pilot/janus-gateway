@@ -24,6 +24,7 @@ RUN apt-get install -y --no-install-recommends \
     libtool \
     libglib2.0-dev \
     pkg-config \
+    gengetopt \
     python3-pip \
     ninja-build
 
