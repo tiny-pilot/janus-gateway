@@ -124,9 +124,7 @@ RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
     "${PKG_DIR}/"
 
 # Copy shared library dependencies.
-RUN cp --parents /usr/lib/arm-linux-gnueabihf/libconfig.so* \
-    /usr/lib/arm-linux-gnueabihf/libjansson.so* \
-    /usr/lib/arm-linux-gnueabihf/libnice.so* \
+RUN cp --parents /usr/lib/arm-linux-gnueabihf/libnice.so* \
     /usr/lib/libsrtp2.so* \
     /usr/lib/libwebsockets.so* \
     "${PKG_DIR}/"
@@ -139,7 +137,8 @@ RUN cat > control <<EOF
 Package: ${PKG_NAME}
 Version: ${PKG_VERSION}
 Maintainer: TinyPilot Support <support@tinypilotkvm.com>
-Depends: libsystemd0
+Depends: libconfig9, libglib2.0-0, libjansson4, libssl1.1, libc6, libsystemd0
+Conflicts: libnice10, libsrtp2-1, libwebsockets16
 Architecture: ${PKG_ARCH}
 Homepage: https://janus.conf.meetecho.com/
 Description: An open source, general purpose, WebRTC server
