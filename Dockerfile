@@ -111,14 +111,24 @@ EOF
 
 RUN mkdir --parents "${PKG_DIR}"
 
-RUN cp --parents --recursive "${INSTALL_DIR}/bin/janus" \
-    "${INSTALL_DIR}/etc/janus" \
+RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
+    "${INSTALL_DIR}/bin/janus" \
+    "${INSTALL_DIR}/bin/janus-cfgconv" \
     "${INSTALL_DIR}/lib/janus" \
     "${INSTALL_DIR}/include/janus" \
     "${INSTALL_DIR}/share/janus" \
     "${INSTALL_DIR}/share/doc/janus-gateway" \
-    "${INSTALL_DIR}/share/man/man1/janus"* \
+    "${INSTALL_DIR}/share/man/man1/janus.1" \
+    "${INSTALL_DIR}/share/man/man1/janus-cfgconv.1" \
     /lib/systemd/system/janus.service \
+    "${PKG_DIR}/"
+
+# Copy shared library dependencies.
+RUN cp --parents /usr/lib/arm-linux-gnueabihf/libconfig.so* \
+    /usr/lib/arm-linux-gnueabihf/libjansson.so* \
+    /usr/lib/arm-linux-gnueabihf/libnice.so* \
+    /usr/lib/libsrtp2.so* \
+    /usr/lib/libwebsockets.so* \
     "${PKG_DIR}/"
 
 RUN mkdir "${PKG_DIR}/DEBIAN"
@@ -129,7 +139,7 @@ RUN cat > control <<EOF
 Package: ${PKG_NAME}
 Version: ${PKG_VERSION}
 Maintainer: TinyPilot Support <support@tinypilotkvm.com>
-Depends: libc6
+Depends: libsystemd0
 Architecture: ${PKG_ARCH}
 Homepage: https://janus.conf.meetecho.com/
 Description: An open source, general purpose, WebRTC server
@@ -144,11 +154,13 @@ RUN cat > preinst <<EOF
 #!/bin/bash
 rm -rf "${INSTALL_DIR}/etc/janus" \
     "${INSTALL_DIR}/bin/janus" \
+    "${INSTALL_DIR}/bin/janus-cfgconv" \
     "${INSTALL_DIR}/lib/janus" \
     "${INSTALL_DIR}/include/janus" \
     "${INSTALL_DIR}/share/janus" \
     "${INSTALL_DIR}/share/doc/janus-gateway" \
-    "${INSTALL_DIR}/share/man/man1/janus"* \
+    "${INSTALL_DIR}/share/man/man1/janus.1" \
+    "${INSTALL_DIR}/share/man/man1/janus-cfgconv.1" \
     /lib/systemd/system/janus.service
 systemctl disable --now janus.service > /dev/null 2>&1 || true
 EOF
