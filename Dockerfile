@@ -30,7 +30,8 @@ RUN apt-get install -y --no-install-recommends \
 
 RUN pip3 install meson
 
-# libince is recommended to be installed from source because the version installed via apt is too low
+# libince is recommended to be installed from source because the version
+# installed via apt is too low.
 RUN git clone https://gitlab.freedesktop.org/libnice/libnice \
         --branch 0.1.18 \
         --single-branch && \
@@ -55,7 +56,8 @@ RUN git clone https://libwebsockets.org/repo/libwebsockets \
     cd build && \
     # See https://github.com/meetecho/janus-gateway/issues/732 re: LWS_MAX_SMP
     # See https://github.com/meetecho/janus-gateway/issues/2476 re: LWS_WITHOUT_EXTENSIONS
-    cmake -DLWS_MAX_SMP=1 -DLWS_WITHOUT_EXTENSIONS=0 -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
+    cmake -DLWS_MAX_SMP=1 -DLWS_WITHOUT_EXTENSIONS=0 \
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_C_FLAGS="-fpic" .. && \
     make && \
     make install
 
@@ -74,17 +76,22 @@ RUN git clone https://github.com/meetecho/janus-gateway.git \
     make install
 
 # Allow Janus C header files to be included when compiling third-party plugins.
-RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' "${INSTALL_DIR}/include/janus/plugins/plugin.h"
+# Issue: https://github.com/tiny-pilot/ansible-role-tinypilot/issues/192
+RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' \
+    "${INSTALL_DIR}/include/janus/plugins/plugin.h"
 
-# Ensure default directories exist.
+# Ensure Janus default library directories exist.
 RUN mkdir --parents "${INSTALL_DIR}/lib/janus/plugins" \
-    "${INSTALL_DIR}/lib/janus/transports"
+    "${INSTALL_DIR}/lib/janus/transports" \
+    "${INSTALL_DIR}/lib/janus/loggers"
 
-# Use sample config.
-RUN mv "${INSTALL_DIR}/etc/janus/janus.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.jcfg" && \
-    mv "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg.sample" "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg"
+# Use Janus sample config.
+RUN mv "${INSTALL_DIR}/etc/janus/janus.jcfg.sample" \
+        "${INSTALL_DIR}/etc/janus/janus.jcfg" && \
+    mv "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg.sample" \
+        "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg"
 
-# Overwrite WebSocket config.
+# Overwrite Janus WebSocket config.
 RUN cat > "${INSTALL_DIR}/etc/janus/janus.transport.websockets.jcfg" <<EOF
 general: {
     ws = true
@@ -111,6 +118,7 @@ EOF
 
 RUN mkdir --parents "${PKG_DIR}"
 
+# Add Janus files to the Debian package.
 RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
     "${INSTALL_DIR}/bin/janus" \
     "${INSTALL_DIR}/bin/janus-cfgconv" \
@@ -123,7 +131,7 @@ RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
     /lib/systemd/system/janus.service \
     "${PKG_DIR}/"
 
-# Copy shared library dependencies.
+# Add Janus compiled shared library dependencies to the Debian package.
 RUN cp --parents /usr/lib/arm-linux-gnueabihf/libnice.so* \
     /usr/lib/libsrtp2.so* \
     /usr/lib/libwebsockets.so* \
