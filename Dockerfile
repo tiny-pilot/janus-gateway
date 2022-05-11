@@ -165,7 +165,7 @@ RUN chmod 0555 preinst
 
 RUN cat > postinst <<EOF
 #!/bin/bash
-systemctl enable --now janus.service
+systemctl enable --now janus.service > /dev/null 2>&1 || true
 EOF
 RUN chmod 0555 postinst
 
