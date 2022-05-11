@@ -8,6 +8,8 @@ ARG PKG_ID="${PKG_NAME}_${PKG_VERSION}-${PKG_BUILD_NUMBER}_${PKG_ARCH}"
 ARG PKG_DIR="/releases/${PKG_ID}"
 ARG INSTALL_DIR="/usr"
 
+COPY . /app
+
 RUN set -x && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -61,10 +63,8 @@ RUN git clone https://libwebsockets.org/repo/libwebsockets \
     make && \
     make install
 
-RUN git clone https://github.com/meetecho/janus-gateway.git \
-        --branch v1.0.0 \
-        --single-branch && \
-    cd janus-gateway && \
+# Compile Janus.
+RUN cd /app && \
     sh autogen.sh && \
     ./configure --prefix=/usr \
         --disable-all-plugins \
