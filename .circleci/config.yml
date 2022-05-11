@@ -4,11 +4,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     environment:
-      PKG_NAME: "janus"
       PKG_VERSION: "1.0.0"
-      PKG_BUILD_NUMBER: "1"
-      PKG_ARCH: "armhf"
-      PKG_ID: "${PKG_NAME}_${PKG_VERSION}-${PKG_BUILD_NUMBER}_${PKG_ARCH}"
     steps:
       - checkout
       - setup_remote_docker:
@@ -45,7 +41,7 @@ jobs:
               --output type=local,dest=$(pwd)/releases/ \
               .
       - store_artifacts:
-          path: releases/${PKG_ID}.deb
+          path: releases
 workflows:
   build:
     jobs:
