@@ -159,16 +159,6 @@ EOF
 
 RUN cat > preinst <<EOF
 #!/bin/bash
-rm -rf "${INSTALL_DIR}/etc/janus" \
-    "${INSTALL_DIR}/bin/janus" \
-    "${INSTALL_DIR}/bin/janus-cfgconv" \
-    "${INSTALL_DIR}/lib/janus" \
-    "${INSTALL_DIR}/include/janus" \
-    "${INSTALL_DIR}/share/janus" \
-    "${INSTALL_DIR}/share/doc/janus-gateway" \
-    "${INSTALL_DIR}/share/man/man1/janus.1" \
-    "${INSTALL_DIR}/share/man/man1/janus-cfgconv.1" \
-    /lib/systemd/system/janus.service
 systemctl disable --now janus.service > /dev/null 2>&1 || true
 EOF
 RUN chmod 0555 preinst
