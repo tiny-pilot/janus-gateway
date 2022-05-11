@@ -132,7 +132,7 @@ RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
     "${PKG_DIR}/"
 
 # Add Janus compiled shared library dependencies to the Debian package.
-RUN cp --parents /usr/lib/arm-linux-gnueabihf/libnice.so* \
+RUN cp --parents --no-dereference /usr/lib/arm-linux-gnueabihf/libnice.so* \
     /usr/lib/libsrtp2.so* \
     /usr/lib/libwebsockets.so* \
     "${PKG_DIR}/"
