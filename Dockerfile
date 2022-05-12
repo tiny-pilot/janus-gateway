@@ -7,6 +7,9 @@ ARG PKG_ARCH="armhf"
 ARG PKG_ID="${PKG_NAME}_${PKG_VERSION}-${PKG_BUILD_NUMBER}_${PKG_ARCH}"
 ARG PKG_DIR="/releases/${PKG_ID}"
 ARG INSTALL_DIR="/usr"
+ARG LIBNICE_VERSION="0.1.18"
+ARG LIBSRTP_VERSION="2.2.0"
+ARG LIBWEBSOCKETS_VERSION="v3.2-stable"
 
 COPY . /app
 
@@ -35,23 +38,23 @@ RUN pip3 install meson
 # libince is recommended to be installed from source because the version
 # installed via apt is too low.
 RUN git clone https://gitlab.freedesktop.org/libnice/libnice \
-        --branch 0.1.18 \
+        --branch "${LIBNICE_VERSION}" \
         --single-branch && \
     cd libnice && \
     meson --prefix=/usr build && \
     ninja -C build && \
     ninja -C build install
 
-RUN wget https://github.com/cisco/libsrtp/archive/v2.2.0.tar.gz && \
-    tar xfv v2.2.0.tar.gz && \
-    cd libsrtp-2.2.0 && \
+RUN wget "https://github.com/cisco/libsrtp/archive/v${LIBSRTP_VERSION}.tar.gz" && \
+    tar xfv "v${LIBSRTP_VERSION}.tar.gz" && \
+    cd "libsrtp-${LIBSRTP_VERSION}" && \
     ./configure --prefix=/usr \
         --enable-openssl && \
     make shared_library && \
     make install
 
 RUN git clone https://libwebsockets.org/repo/libwebsockets \
-        --branch v3.2-stable \
+        --branch "${LIBWEBSOCKETS_VERSION}" \
         --single-branch && \
     cd libwebsockets && \
     mkdir build && \
