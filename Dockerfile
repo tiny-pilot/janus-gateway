@@ -115,7 +115,7 @@ Documentation=https://janus.conf.meetecho.com/docs/index.html
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/janus --disable-colors --daemon --log-stdout
+ExecStart=${INSTALL_DIR}/bin/janus --disable-colors --daemon --log-stdout
 Restart=on-failure
 LimitNOFILE=65536
 
