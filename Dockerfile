@@ -18,22 +18,29 @@ RUN set -x && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
       dpkg-dev
 
+# Install general-purpose packages.
 RUN apt-get install -y --no-install-recommends \
     git \
     wget \
-    libjansson-dev \
-    libconfig-dev \
-    libssl-dev \
-    cmake \
-    automake \
-    libtool \
-    libglib2.0-dev \
-    pkg-config \
-    gengetopt \
     python3-pip \
+    cmake \
+    pkg-config
+
+# Install additional libnice dependency packages.
+RUN apt-get install -y --no-install-recommends \
+    libglib2.0-dev \
+    libssl-dev \
     ninja-build
 
 RUN pip3 install meson
+
+# Install additional Janus dependency packages.
+RUN apt-get install -y --no-install-recommends \
+    automake \
+    libtool \
+    libjansson-dev \
+    libconfig-dev \
+    gengetopt
 
 # libince is recommended to be installed from source because the version
 # installed via apt is too low.
