@@ -6,7 +6,7 @@ ARG PKG_BUILD_NUMBER="1"
 ARG PKG_ARCH="armhf"
 ARG PKG_ID="${PKG_NAME}_${PKG_VERSION}-${PKG_BUILD_NUMBER}_${PKG_ARCH}"
 ARG PKG_DIR="/releases/${PKG_ID}"
-ARG INSTALL_DIR="/usr"
+ARG INSTALL_DIR="/opt/janus"
 ARG LIBNICE_VERSION="0.1.18"
 ARG LIBSRTP_VERSION="2.2.0"
 ARG LIBWEBSOCKETS_VERSION="v3.2-stable"
@@ -73,7 +73,7 @@ RUN git clone https://libwebsockets.org/repo/libwebsockets \
 # Compile Janus.
 RUN cd /app && \
     sh autogen.sh && \
-    ./configure --prefix=/usr \
+    ./configure --prefix="${INSTALL_DIR}" \
         --disable-all-plugins \
         --disable-all-transports \
         --disable-all-handlers \
