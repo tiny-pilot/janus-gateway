@@ -92,7 +92,8 @@ RUN cd /app && \
 # Allow Janus C header files to be included when compiling third-party plugins.
 # Issue: https://github.com/tiny-pilot/ansible-role-tinypilot/issues/192
 RUN sed -i -e 's|^#include "refcount.h"$|#include "../refcount.h"|g' \
-    "${INSTALL_DIR}/include/janus/plugins/plugin.h"
+    "${INSTALL_DIR}/include/janus/plugins/plugin.h" && \
+    ln -s "${INSTALL_DIR}/include/janus" /usr/include/ || true
 
 # Ensure Janus default library directories exist.
 RUN mkdir --parents "${INSTALL_DIR}/lib/janus/plugins" \
@@ -133,11 +134,12 @@ EOF
 RUN mkdir --parents "${PKG_DIR}"
 
 # Add Janus files to the Debian package.
-RUN cp --parents --recursive "${INSTALL_DIR}/etc/janus" \
+RUN cp --parents --recursive --no-dereference "${INSTALL_DIR}/etc/janus" \
     "${INSTALL_DIR}/bin/janus" \
     "${INSTALL_DIR}/bin/janus-cfgconv" \
     "${INSTALL_DIR}/lib/janus" \
     "${INSTALL_DIR}/include/janus" \
+    /usr/include/janus \
     "${INSTALL_DIR}/share/janus" \
     "${INSTALL_DIR}/share/doc/janus-gateway" \
     "${INSTALL_DIR}/share/man/man1/janus.1" \
