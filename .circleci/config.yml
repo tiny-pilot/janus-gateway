@@ -40,6 +40,7 @@ jobs:
               --build-arg "PKG_BUILD_NUMBER=$(date '+%Y%m%d')" \
               --target=artifact \
               --output type=local,dest=$(pwd)/releases/ \
+              --file debian/Dockerfile \
               .
       - store_artifacts:
           path: releases
