@@ -1,3 +1,7 @@
+# syntax=docker/dockerfile:1.4
+# Enable here-documents:
+# https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md#here-documents
+
 FROM debian:buster-20220418-slim AS build
 
 ARG PKG_NAME="janus"
