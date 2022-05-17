@@ -2,7 +2,7 @@
 
 ## Overview
 
-We use a [Dockerfile](Dockerfile) to build an ARMv7 (armhf) Debian package with precompiled Janus binaries. The resulting Debian package is stored as a Docker artifact. For example:
+We use Docker as a build context for creating an ARMv7 (armhf) Debian package, with precompiled Janus binaries (see the [Dockerfile](Dockerfile) for the complete build procedure). The resulting artifact is emitted to the `releases/` folder. For example:
 
 ```bash
 releases/janus_1.0.2-20220513_armhf.deb
