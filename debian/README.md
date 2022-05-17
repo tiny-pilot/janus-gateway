@@ -43,13 +43,12 @@ pushd "$(mktemp -d)" && \
 On device, run the following command:
 
 ```bash
-# Install dependencies.
-sudo apt-get install --yes \
-  libconfig9 \
-  libjansson4
-# Install Janus.
+# Install Janus. This is expected to fail, if there are missing dependencies.
+# This leaves Janus installed, but unconfigured.
 sudo dpkg --install \
   "releases/janus_${PKG_VERSION}-${PKG_BUILD_NUMBER}_armhf.deb"
+# Install the missing dependencies and complete the Janus configuration.
+sudo apt-get install --fix-broken --yes
 ```
 
 You can confirm that the Janus systemd service is running, by executing the following command:
