@@ -16,7 +16,7 @@ releases/janus_1.0.2-20220513_armhf.deb
 
 ## Build
 
-On device, run the following commands:
+On the device, run the following commands:
 
 ```bash
 # Set the Janus version.
@@ -40,7 +40,7 @@ pushd "$(mktemp -d)" && \
 
 ## Install
 
-On device, run the following command:
+On the device, run the following command:
 
 ```bash
 # Install Janus. This is expected to fail, if there are missing dependencies.
@@ -59,7 +59,7 @@ sudo systemctl status janus.service
 
 ## Uninstall
 
-On device, run the following command:
+On the device, run the following command:
 
 ```bash
 sudo dpkg --purge janus
