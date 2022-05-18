@@ -66,3 +66,6 @@ p2m-cmdline.h
 
 .vscode
 node_modules
+
+# Docker artifacts.
+/releases
