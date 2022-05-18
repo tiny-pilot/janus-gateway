@@ -3,10 +3,16 @@ jobs:
   build_deb_pkg:
     docker:
       - image: cimg/base:stable
-    environment:
-      PKG_VERSION: "${CIRCLE_TAG}"
     steps:
       - checkout
+      - run:
+          name: Set custom environment variables
+          command: |
+            # Strip leading 'v' from git tag.
+            PKG_VERSION="${CIRCLE_TAG/#v/}"
+            # Set environment variables.
+            echo "export PKG_VERSION="${PKG_VERSION}"" >> "${BASH_ENV}"
+            echo 'export PKG_BUILD_NUMBER="$(date '+%Y%m%d')"' >> "${BASH_ENV}"
       - setup_remote_docker:
           version: 20.10.11
       - run:
@@ -37,7 +43,7 @@ jobs:
             docker buildx build \
               --platform linux/arm/v7 \
               --build-arg PKG_VERSION \
-              --build-arg "PKG_BUILD_NUMBER=$(date '+%Y%m%d')" \
+              --build-arg PKG_BUILD_NUMBER \
               --target=artifact \
               --output type=local,dest=$(pwd)/releases/ \
               --file debian/Dockerfile \
@@ -50,6 +56,6 @@ workflows:
       - build_deb_pkg:
           filters:
             tags:
-              only: /[0-9]+(\.[0-9]+){2}/
+              only: /^v[0-9]+(\.[0-9]+){2}$/
             branches:
               ignore: /.*/
